@@ -5,8 +5,8 @@ import numpy as np
 from datetime import datetime
 import csv
 
-# Load known faces from pre-encoded .npy files
 def load_known_faces_from_encodings(folder):
+    """Load known face encodings and names from .npy files in a folder."""
     known_face_encodings = []
     known_face_names = []
     
@@ -19,85 +19,40 @@ def load_known_faces_from_encodings(folder):
     
     return known_face_encodings, known_face_names
 
-# Path to the folder containing encoded .npy files
-encoded_folder = r'encoded_pics'
-known_face_encodings, known_face_names = load_known_faces_from_encodings(encoded_folder)
 
-# Start capturing video from the webcam
-cap = cv2.VideoCapture(0)
 
-# Process every n-th frame for face recognition
-process_this_frame = True
-
-# CSV file to log recognized faces
-csv_file = 'recognition_log.csv'
-
-# Create the CSV file and write the header if it doesn't exist
-if not os.path.isfile(csv_file):
-    with open(csv_file, mode='w', newline='') as file:
+def log_recognition(name, csv_file):
+    """Log recognized face information into the CSV file."""
+    now = datetime.now()
+    date = now.strftime("%Y-%m-%d")
+    time = now.strftime("%H:%M:%S")
+    
+    with open(csv_file, mode='a', newline='') as file:
         writer = csv.writer(file)
-        writer.writerow(['Name', 'Date', 'Time'])  # Writing header
+        writer.writerow([date, time, ' ', name])  # Assuming number plate is not used
 
-while True:  # Run indefinitely until a face is recognized
-    ret, frame = cap.read()
-    if not ret:
-        break
-
+def recognize_faces(frame, known_face_encodings, known_face_names):
+    """Recognize faces in a given frame."""
+    rgb_small_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+    face_locations = face_recognition.face_locations(rgb_small_frame)
+    face_encodings = face_recognition.face_encodings(rgb_small_frame, face_locations)
     
-    small_frame = cv2.resize(frame, (0, 0), fx=0.25, fy=0.25)  # Quarter size
-    rgb_small_frame = cv2.cvtColor(small_frame, cv2.COLOR_BGR2RGB)
-
-    
-    face_locations = []
-    face_encodings = []
     face_names = []
+    for face_encoding in face_encodings:
+        matches = face_recognition.compare_faces(known_face_encodings, face_encoding)
+        name = "Unknown"
 
-    # Process only every other frame for speed
-    if process_this_frame:
-       
-        face_locations = face_recognition.face_locations(rgb_small_frame)
-        face_encodings = face_recognition.face_encodings(rgb_small_frame, face_locations)
-
-       
-        face_names = []
-        status_message = "Not a resident "  # Default message
-        for face_encoding in face_encodings:
-            matches = face_recognition.compare_faces(known_face_encodings, face_encoding)
-            name = "Unknown"
-
-            # Use the first match (if any)
-            if True in matches:
-                first_match_index = matches.index(True)
-                name = known_face_names[first_match_index]
-                print(f"Recognized: {name} - True")  # Print recognized name and True
-
-                # Get current date and time
-                now = datetime.now()
-                date = now.strftime("%Y-%m-%d")
-                time = now.strftime("%H:%M:%S")
-                
-                # Log recognized name with date and time to CSV
-                with open(csv_file, mode='a', newline='') as file:
-                    writer = csv.writer(file)
-                    writer.writerow([name, date, time])  # Writing name, date, and time
-                    print(f"Logged: {name} recognized on {date} at {time}")
-
-                # Display recognition status on frame
-                status_message = f"Recognized: {name} - True"
-                
-                # Exit after recognizing a face
-                cap.release()  # Release the webcam
-                cv2.destroyAllWindows()  # Close all OpenCV windows
-                exit()  # Exit the program
-                
-            else:
-                status_message = "Not a resident - False"  # Update status message for unknown faces
-
+        if True in matches:
+            first_match_index = matches.index(True)
+            name = known_face_names[first_match_index]
             face_names.append(name)
+        else:
+            face_names.append(name)
+    
+    return face_locations, face_names
 
-    process_this_frame = not process_this_frame  # Alternate frame processing
-
-    # Draw rectangles and names
+def draw_face_boxes(frame, face_locations, face_names):
+    """Draw rectangles around recognized faces in the frame."""
     for (top, right, bottom, left), name in zip(face_locations, face_names):
         top *= 4
         right *= 4
@@ -111,16 +66,41 @@ while True:  # Run indefinitely until a face is recognized
         font = cv2.FONT_HERSHEY_DUPLEX
         cv2.putText(frame, name, (left + 6, bottom - 6), font, 0.5, (255, 255, 255), 1)
 
-    # Display the recognition status message at the top of the frame
+def main(cap):
+    # Load known faces
+    encoded_folder = r'encoded_pics'
+    known_face_encodings, known_face_names = load_known_faces_from_encodings(encoded_folder)
+
+    # Initialize webcam
+    
+    # CSV file to log recognized faces
+    csv_file = 'logs.csv'
+    
+    process_this_frame = True
+
+    ret, frame = cap.read()
+
+    if process_this_frame:
+        face_locations, face_names = recognize_faces(frame, known_face_encodings, known_face_names)
+            
+        status_message = "Not a resident"
+        doorstat=False
+        for name in face_names:
+            if name != "Unknown":
+                log_recognition(name, csv_file)
+                status_message = f"Recognized: {name} - True"
+                doorstat=True
+                break  # Stop after logging the first recognized name
+        
+    process_this_frame = not process_this_frame
+        
+    # Draw face boxes and display the status message
+    draw_face_boxes(frame, face_locations, face_names)
     cv2.putText(frame, status_message, (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2, cv2.LINE_AA)
 
-    # Show the video feed
+        # Show the video feed
     cv2.imshow('Face Recognition', frame)
-
-    # Break on 'q' key press
-    if cv2.waitKey(1) & 0xFF == ord('q'):
-        break
-
-# Release the webcam and close windows
-cap.release()
-cv2.destroyAllWindows()
+    print(status_message)
+    
+    # Release resources
+    return doorstat

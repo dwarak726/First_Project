@@ -12,7 +12,7 @@ def addlog(file_path, text):
     """
     current_time = datetime.datetime.now().strftime("%Y-%m-%d , %H:%M:%S")
     with open(file_path, 'a') as file:
-        file.write(f"{current_time} , {text}\n")
+        file.write(f"{current_time} , {text} , \n")
 
 def numberplate_registercheck(number_plate_file, text):
     """
@@ -50,29 +50,7 @@ def process_frame(frame, number_plate_file, log_file):
 
     return False  # Door remains closed if no matching number plate is found
 
-def core_capture_process(number_plate_file, log_file):
-    cap = cv2.VideoCapture(0)
-    door = False
 
-    while True:
-        ret, frame = cap.read()
-        if not ret:
-            print("Failed to capture frame")
-            break
-
-        # Process the captured frame
-        door = process_frame(frame, number_plate_file, log_file)
-
-        # Print the door status
-        print("Now Door is ", door)
-
-        # Exit loop if 'q' is pressed
-        if cv2.waitKey(1000) & 0xFF == ord('q'):
-            break
-
-    # Release video capture and close all windows
-    cap.release()
-    cv2.destroyAllWindows()
 
 # File paths
 '''

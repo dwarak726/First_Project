@@ -24,6 +24,6 @@ for filename in os.listdir(image_folder):
         # Save the first encoding, assuming one face per image
         if face_encodings:
             # Save the encoding as a .npy file
-            np.save(os.path.join(encoded_folder, f"{os.path.splitext(filename)[0]}_encoding.npy"), face_encodings[0])
+            np.save(os.path.join(encoded_folder, f"{os.path.splitext(filename)[0]}.npy"), face_encodings[0])
 
 print("All images have been encoded and saved.")
