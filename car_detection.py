@@ -22,7 +22,7 @@ def detect_vehicle(image):
     # Perform detection
     yolo_net.setInput(blob)
     outputs = yolo_net.forward(output_layers)
-
+    
     # Vehicle detection flags
     vehicle_detected = False
     for out in outputs:

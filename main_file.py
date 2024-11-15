@@ -39,7 +39,7 @@ def core_capture_process(number_plate_file, log_file):
         # Exit loop if 'q' is pressed
         if cv2.waitKey(50) & 0xFF == ord('q'):
             break
-
+                
     # Release video capture and close all windows
     cap.release()
     cv2.destroyAllWindows()

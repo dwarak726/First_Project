@@ -82,7 +82,7 @@ def main(cap):
 
     if process_this_frame:
         face_locations, face_names = recognize_faces(frame, known_face_encodings, known_face_names)
-            
+              
         status_message = ""
         doorstat=False
         for name in face_names:

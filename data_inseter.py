@@ -7,7 +7,7 @@ connection = mysql.connector.connect(
     password='dwaraksql@726',# e.g., 'password'
     database='apartment_info'# e.g., 'apartment_info'
 )
-
+    
 # 2. Create a cursor object (outside the loop)
 cursor = connection.cursor()
 
