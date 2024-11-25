@@ -33,13 +33,13 @@ def process_frame(frame, number_plate_file, log_file):
     result = ocr.ocr(frame, cls=True)
 
     if result is None or len(result) == 0:
-        return False  # No text detected, door stays closedd
+        return False  # No text detected, door stays closed
 
     for line in result:
         if line is not None:
             for word_info in line:
                 text = word_info[1][0]  # Extract recognized text
-     
+
                 # Check if the recognized number plate is registered
                 if numberplate_registercheck(number_plate_file, text):
                     status_message="numberplate matched"

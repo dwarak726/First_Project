@@ -17,7 +17,7 @@ for filename in os.listdir(image_folder):
         # Load image
         image_path = os.path.join(image_folder, filename)
         image = face_recognition.load_image_file(image_path)
-          
+
         # Find face encodings (returns a list of encodings for each face in the image)
         face_encodings = face_recognition.face_encodings(image)
 
