@@ -71,7 +71,6 @@ def core_capture_process(number_plate_file):
             # Call face recognition and log to Firebase
             door = fr.main(cap)
 
-        # Print the door status
         print("Now Door is ", "Open" if door else "Closed")
 
         # Exit loop if 'q' is pressed
