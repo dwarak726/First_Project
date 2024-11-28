@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Secure Nest - OTP Verification</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+
+        .container {
+            margin-top: 50px;
+            max-width: 500px;
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0px 0px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn {
+            margin-top: 20px;
+        }
+
+        .spinner-border {
+            display: none;
+        }
+
+        .alert {
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h2 class="text-center">OTP Verification</h2>
+        <div id="otpSection">
+            <form>
+                <div class="form-group">
+                    <label for="flatInput">Enter your flat number:</label>
+                    <input type="text" id="flatInput" class="form-control" placeholder="Flat Number" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="otpInput">Enter OTP sent to your phone:</label>
+                    <input type="text" id="otpInput" class="form-control" placeholder="Enter OTP" required>
+                </div>
+
+                <button type="button" class="btn btn-primary btn-block" onclick="verifyOTP()" id="submitBtn">Submit OTP</button>
+                <div class="text-center mt-2">
+                    <div class="spinner-border text-primary" id="loadingSpinner" role="status">
+                        <span class="sr-only">Loading...</span>
+                    </div>
+                </div>
+            </form>
+
+            <!-- Success and Error Alerts -->
+            <div class="alert alert-success mt-4" id="successAlert" role="alert">
+                Access Granted! Welcome.
+            </div>
+            <div class="alert alert-danger mt-4" id="errorAlert" role="alert">
+                Incorrect OTP. Please try again.
+            </div>
+        </div>
+
+        <div id="accessGranted" style="display:none;">
+            <h1 class="text-center text-success">Access Granted!</h1>
+            <p class="text-center">Welcome! You have successfully logged in.</p>
+        </div>
+    </div>
+
+    <!-- Firebase App (the core Firebase SDK) -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <!-- Firebase Realtime Database -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+
+    <script>
+        // Your Firebase configuration
+        var firebaseConfig = {
+            apiKey: "YOUR_API_KEY",
+            authDomain: "YOUR_AUTH_DOMAIN",
+            databaseURL: "https://project-aac-f5a23-default-rtdb.firebaseio.com",
+            projectId: "project-aac-f5a23",
+            storageBucket: "YOUR_STORAGE_BUCKET",
+            messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+            appId: "YOUR_APP_ID"
+        };
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+    
+        function verifyOTP() {
+            const flat = document.getElementById('flatInput').value.trim();
+            const enteredOTP = document.getElementById('otpInput').value.trim();
+            const submitBtn = document.getElementById('submitBtn');
+            const loadingSpinner = document.getElementById('loadingSpinner');
+            const successAlert = document.getElementById('successAlert');
+            const errorAlert = document.getElementById('errorAlert');
+    
+            if (flat === "" || enteredOTP === "") {
+                alert("Please fill in all fields.");
+                return;
+            }
+    
+            loadingSpinner.style.display = "inline-block";
+            submitBtn.disabled = true;
+    
+            // Query the database to find the correct OTP entry
+            const otpRef = firebase.database().ref('otp');
+            otpRef.once('value').then((snapshot) => {
+                let matchedKey = null;
+    
+                snapshot.forEach(childSnapshot => {
+                    const data = childSnapshot.val();
+                    if (data.flatno === flat && enteredOTP === childSnapshot.key) {
+                        // Match found
+                        matchedKey = childSnapshot.key;
+                    }
+                });
+                if (matchedKey) {
+                    // Update 'visited' to true
+                    const updateRef = firebase.database().ref(`otp/${matchedKey}`);
+                    updateRef.update({ visited: true }).then(() => {
+                        successAlert.style.display = 'block';
+                        errorAlert.style.display = 'none';
+                        document.getElementById('otpSection').style.display = 'none';
+                        document.getElementById('accessGranted').style.display = 'block';
+                    }).catch((error) => {
+                        console.error("Error updating visited status:", error);
+                        alert("An error occurred while updating visited status.");
+                    });
+                } else {
+                    // OTP does not match
+                    errorAlert.style.display = 'block';
+                    successAlert.style.display = 'none';
+                }
+            }).catch((error) => {
+                console.error("Error verifying OTP:", error);
+                alert("An error occurred while verifying OTP. Please try again.");
+            }).finally(() => {
+                loadingSpinner.style.display = "none";
+                submitBtn.disabled = false;
+            });
+        }
+    </script>
+    
+    
+</body>
+
+</html>
