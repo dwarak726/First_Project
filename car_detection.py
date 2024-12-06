@@ -37,8 +37,3 @@ def detect_vehicle(image):
                 break
 
     return vehicle_detected
-
-
-
-
-

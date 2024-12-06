@@ -5,12 +5,24 @@ from paddleocr import PaddleOCR
 from datetime import datetime
 import firebase_admin
 from firebase_admin import credentials, db
+import serial
+import time
 
 import car_detection as car_d
 
 import Character_recognision as cr
 
 import face_recogniser as fr
+
+def opendoor(statdoor):
+    if statdoor==True:
+    # Set up the serial connection
+        arduino = serial.Serial(port='COM6', baudrate=115200, timeout=1)  # Replace 'COM5' with your Arduino's port
+        time.sleep(2)
+        arduino.write(b'1')  # Send the command to rotate the servo
+        print("Door has rotated")
+        time.sleep(2)        # Wait for the operation to complete
+        arduino.close()
 
 def check_visited_status_for_all():
     try:
@@ -54,12 +66,14 @@ def core_capture_process(number_plate_file):
     
     while True:
         ret, frame = cap.read()
-        if check_visited_status_for_all():
-            print('Outside access has been granted using')
-            continue
         if not ret:
             print("Failed to capture frame")
             break
+        if check_visited_status_for_all():
+            print('Outside access has been granted')
+        #    opendoor(True)
+            continue
+
 
         door = False
 
@@ -71,7 +85,9 @@ def core_capture_process(number_plate_file):
             # Call face recognition and log to Firebase
             door = fr.main(cap)
 
+        # Print the door status
         print("Now Door is ", "Open" if door else "Closed")
+        #opendoor(door)
 
         # Exit loop if 'q' is pressed
         if cv2.waitKey(50) & 0xFF == ord('q'):
@@ -80,7 +96,7 @@ def core_capture_process(number_plate_file):
     # Release video capture and close all windows
     cap.release()
     cv2.destroyAllWindows()
-
+    
 # Firebase Initialization
 cred = credentials.Certificate(r"C:/Users/dwarak.g/Downloads/project-aac-f5a23-firebase-adminsdk-cjdmf-16dbc41aa2.json")  
 firebase_admin.initialize_app(cred, {
@@ -94,4 +110,3 @@ ocr = PaddleOCR(use_angle_cls=True, lang='en')
 number_plate_file = r'vehicle_numberplates.csv'  # Path to the number plate file 
 # Run the core processing function
 core_capture_process(number_plate_file)
-
