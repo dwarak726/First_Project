@@ -14,8 +14,7 @@
 
 
 ## Abstract
-<p align="left">      Secure Nest is an automated security solution for residential complexes, enhancing safety and streamlining access control. It uses object detection, license plate recognition, and face recognition to ensure secure entry. For vehicles, cameras scan license plates to match registered residents, granting access upon a match. For pedestrians, face recognition verifies identities against stored profiles.
-The system features a dual-portal visitor management setup, allowing residents to preauthorize entry by generating a one-time password sent to the visitor’s mobile. This password, combined with the flat number, enables access. </p>
+<p align="left">      Secure Nest is an automated security solution for residential complexes, enhancing safety and streamlining access control. It uses object detection, license plate recognition, and face recognition to ensure secure entry. For vehicles, cameras scan license plates to match registered residents, granting access upon a match. For pedestrians, face recognition verifies identities against stored profiles. This is a dual-portal visitor management system whereby residents preauthorize entry with the use of a one-time password sent to the visitor's mobile. The access is thus made possible through the combination of the one-time password with the flat number. Also, an Arduino Nano controls the servo motor such that rotation opens the gate or unlocks it following successful authentication. The servo automatically returns to its original position to secure the gate after a preset delay, adding a physical layer of security to the automated system.</p>
 
 ## Requirements
 ||
